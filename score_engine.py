@@ -52,6 +52,9 @@ def get_subindex_scores() -> pd.DataFrame:
     """)
     with get_engine().connect() as conn:
         df = pd.read_sql(query, conn)
+    # Fill any nulls with 0.5 (neutral percentile) so NaN doesn't propagate
+    for col in ALL_COLUMNS:
+        df[col] = df[col].fillna(0.5)
     return df
 
 def rescore_cities(weights: dict) -> list:
@@ -90,7 +93,9 @@ def rescore_cities(weights: dict) -> list:
         ).round(1)
     else:
         df["personalized_score"] = 50.0
-
+    
+    df["personalized_score"] = df["personalized_score"].fillna(0)
+    
     df = df.sort_values("personalized_score", ascending=False)
 
     results = []
