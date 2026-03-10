@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Touchgrass — Find Your City</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,900;1,300;1,600&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cream:   #faf7f2;
+      --warm:    #f5ede0;
+      --sand:    #e8d9c4;
+      --terracotta: #c4603a;
+      --terra-light: #e07a56;
+      --terra-dark:  #9e4228;
+      --forest:  #3a6b4a;
+      --forest-light: #4e8c62;
+      --ink:     #1e1a16;
+      --ink-mid: #4a3f35;
+      --ink-soft: #7a6e65;
+      --gold:    #d4a843;
+      --radius:  16px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--cream);
+      color: var(--ink);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 400;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* Warm ambient background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 10% 0%, rgba(196,96,58,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 90% 100%, rgba(212,168,67,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 50% 50%, rgba(58,107,74,0.04) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .page-wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 6rem;
+    }
+
+    /* ── HEADER ── */
+    .site-header {
+      text-align: center;
+      margin-bottom: 3.5rem;
+      animation: fadeDown 0.7s ease both;
+    }
+
+    .logo-mark {
+      display: inline-flex;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
+    .logo-text {
+      font-family: 'Space Mono', monospace;
+      font-weight: 700;
+      font-size: 1.4rem;
+      color: var(--ink);
+      letter-spacing: -0.02em;
+    }
+
+    .hero-headline {
+      font-family: 'Fraunces', serif;
+      font-weight: 900;
+      font-size: clamp(2.2rem, 7vw, 3.5rem);
+      line-height: 1.1;
+      color: var(--ink);
+      margin-bottom: 1rem;
+      letter-spacing: -0.03em;
+    }
+
+    .hero-headline em {
+      font-style: italic;
+      font-weight: 300;
+      color: var(--terracotta);
+    }
+
+    .hero-sub {
+      font-size: 1.05rem;
+      color: var(--ink-soft);
+      max-width: 480px;
+      margin: 0 auto;
+      line-height: 1.75;
+    }
+
+    /* ── PROGRESS ── */
+    .progress-bar-wrap {
+      background: var(--sand);
+      border-radius: 99px;
+      height: 6px;
+      margin-bottom: 2.5rem;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--terracotta), var(--terra-light));
+      border-radius: 99px;
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+
+    .progress-label {
+      text-align: right;
+      font-size: 0.78rem;
+      color: var(--ink-soft);
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+
+    /* ── QUESTION CARD ── */
+    .question-card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 2rem 2rem 1.5rem;
+      box-shadow: 0 2px 16px rgba(30,26,22,0.06), 0 1px 3px rgba(30,26,22,0.04);
+      margin-bottom: 1rem;
+      display: none;
+      animation: slideIn 0.4s ease both;
+    }
+
+    .question-card.active { display: block; }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .q-number {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--terracotta);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 0.6rem;
+    }
+
+    .q-text {
+      font-family: 'Fraunces', serif;
+      font-weight: 600;
+      font-size: 1.3rem;
+      color: var(--ink);
+      line-height: 1.35;
+      margin-bottom: 1.5rem;
+    }
+
+    /* ── OPTIONS ── */
+    .options-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .option-btn {
+      width: 100%;
+      padding: 0.9rem 1.2rem;
+      background: var(--cream);
+      border: 2px solid var(--sand);
+      border-radius: 12px;
+      text-align: left;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      color: var(--ink-mid);
+      cursor: pointer;
+      transition: all 0.18s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      line-height: 1.4;
+    }
+
+    .option-btn:hover {
+      border-color: var(--terracotta);
+      color: var(--ink);
+      background: rgba(196,96,58,0.04);
+      transform: translateX(3px);
+    }
+
+    .option-btn.selected {
+      border-color: var(--terracotta);
+      background: rgba(196,96,58,0.08);
+      color: var(--ink);
+      font-weight: 500;
+    }
+
+    .option-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid var(--sand);
+      flex-shrink: 0;
+      transition: all 0.18s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .option-btn.selected .option-dot {
+      background: var(--terracotta);
+      border-color: var(--terracotta);
+    }
+
+    .option-btn.selected .option-dot::after {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: white;
+    }
+
+    /* ── RANKED QUESTION ── */
+    .ranked-label {
+      font-size: 0.8rem;
+      color: var(--ink-soft);
+      margin-bottom: 0.75rem;
+      font-weight: 500;
+    }
+
+    .rank-item {
+      background: var(--cream);
+      border: 2px solid var(--sand);
+      border-radius: 12px;
+      padding: 0.85rem 1.1rem;
+      margin-bottom: 0.5rem;
+      cursor: grab;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.95rem;
+      color: var(--ink-mid);
+      transition: all 0.2s;
+      user-select: none;
+    }
+
+    .rank-item:active { cursor: grabbing; }
+
+    .rank-item.dragging {
+      opacity: 0.5;
+      transform: scale(0.98);
+    }
+
+    .rank-item.drag-over {
+      border-color: var(--terracotta);
+      background: rgba(196,96,58,0.05);
+    }
+
+    .rank-badge {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      background: var(--sand);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--ink-soft);
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+
+    .rank-item:first-child .rank-badge {
+      background: var(--terracotta);
+      color: white;
+    }
+
+    .drag-hint {
+      font-size: 0.72rem;
+      color: var(--ink-soft);
+      text-align: center;
+      margin-top: 0.5rem;
+      opacity: 0.7;
+    }
+
+    /* ── NAV BUTTONS ── */
+    .q-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 1.5rem;
+    }
+
+    .btn-back {
+      background: none;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      color: var(--ink-soft);
+      cursor: pointer;
+      padding: 0.5rem 0;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: color 0.2s;
+    }
+
+    .btn-back:hover { color: var(--ink); }
+    .btn-back:disabled { opacity: 0; pointer-events: none; }
+
+    .btn-next {
+      background: var(--terracotta);
+      color: white;
+      border: none;
+      border-radius: 99px;
+      padding: 0.75rem 2rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-next:hover {
+      background: var(--terra-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(196,96,58,0.3);
+    }
+
+    .btn-next:disabled {
+      background: var(--sand);
+      color: var(--ink-soft);
+      transform: none;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    /* ── CONSENT ── */
+    .consent-section {
+      margin-top: 1.25rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--sand);
+    }
+
+    .consent-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .consent-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      margin-top: 2px;
+      accent-color: var(--terracotta);
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .consent-item label {
+      font-size: 0.82rem;
+      color: var(--ink-soft);
+      line-height: 1.5;
+      cursor: pointer;
+    }
+
+    /* ── SUBMIT ── */
+    .btn-submit {
+      width: 100%;
+      background: linear-gradient(135deg, var(--terracotta), var(--terra-light));
+      color: white;
+      border: none;
+      border-radius: 99px;
+      padding: 1rem 2rem;
+      font-family: 'Fraunces', serif;
+      font-size: 1.15rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s;
+      margin-top: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      box-shadow: 0 4px 20px rgba(196,96,58,0.3);
+    }
+
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(196,96,58,0.4);
+    }
+
+    /* ── TRUST BADGES ── */
+    .trust-row {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      margin-top: 2.5rem;
+      animation: fadeDown 0.7s 0.4s ease both;
+      opacity: 0;
+      animation-fill-mode: both;
+    }
+
+    .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.78rem;
+      color: var(--ink-soft);
+    }
+
+    .trust-item svg {
+      color: var(--forest);
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── MOBILE ── */
+    @media (max-width: 540px) {
+      .page-wrap { padding: 1.5rem 0.9rem 5rem; }
+      .question-card { padding: 1.25rem 1rem 1rem; }
+      .q-text { font-size: 1.05rem; }
+      .hero-headline { font-size: clamp(1.8rem, 9vw, 2.6rem); }
+      .hero-sub { font-size: 0.9rem; }
+      .logo-text { font-size: 1.15rem; }
+      /* Answer options full-width on small screens */
+      .answer-option { width: 100%; }
+      /* Submit button full width */
+      .submit-btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-wrap">
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="logo-mark">
+      <div class="logo-text">Touchgrass</div>
+    </div>
+    <h1 class="hero-headline">
+      Find the city that<br>
+      <em>fits your life</em>
+    </h1>
+    <p class="hero-sub">
+      Answer 12 quick questions and we'll match you with the best US metros based on what you actually care about.
+    </p>
+  </header>
+
+  <!-- Survey Form -->
+  <form id="surveyForm" action="/submit" method="POST">
+
+    <!-- Progress -->
+    <div class="progress-label" id="progressLabel">Question 1 of 12</div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="progressFill"></div>
+    </div>
+
+    <!-- Questions injected by Jinja2 -->
+    {% for question in questions %}
+    <div class="question-card {% if loop.first %}active{% endif %}" id="q{{ question.id }}" data-qid="{{ question.id }}" data-type="{{ question.type }}">
+      <div class="q-number">Question {{ loop.index }} of {{ questions|length }}</div>
+      <div class="q-text">{{ question.text }}</div>
+
+      {% if question.type == "forced" %}
+      <div class="options-list">
+        {% for option in question.options %}
+        <button type="button"
+                class="option-btn"
+                data-value="{{ loop.index0 }}"
+                onclick="selectOption(this, {{ question.id }})">
+          <span class="option-dot"></span>
+          {{ option.text }}
+        </button>
+        {% endfor %}
+      </div>
+      <input type="hidden" name="q_{{ question.id }}" id="input_{{ question.id }}" value="">
+
+      {% elif question.type == "ranked" %}
+      <div class="ranked-label">Drag to rank — most important at the top</div>
+      <div class="rank-list" id="ranklist_{{ question.id }}">
+        {% for option in question.options %}
+        <div class="rank-item" draggable="true" data-index="{{ loop.index0 }}">
+          <div class="rank-badge">{{ loop.index }}</div>
+          {{ option.text }}
+        </div>
+        {% endfor %}
+      </div>
+      <div class="drag-hint">☰ Drag to reorder</div>
+      <input type="hidden" name="q_{{ question.id }}_rank" id="rankinput_{{ question.id }}" value="">
+      {% endif %}
+
+      <div class="q-nav">
+        <button type="button" class="btn-back" id="back_{{ question.id }}" onclick="goBack({{ question.id }})">
+          ← Back
+        </button>
+
+        {% if not loop.last %}
+        <button type="button" class="btn-next" id="next_{{ question.id }}"
+                onclick="goNext({{ question.id }}, {{ loop.index }}, {{ questions|length }})"
+                {% if question.type == "forced" %}disabled{% endif %}>
+          Next →
+        </button>
+        {% else %}
+        <!-- Last question: consent + submit -->
+        <div style="width:100%">
+          <div class="consent-section">
+            <div class="consent-item">
+              <input type="checkbox" name="consent_to_data_use" id="consent_data" value="1">
+              <label for="consent_data">I'm okay with my responses being used to improve Touchgrass's recommendations.</label>
+            </div>
+            <div class="consent-item">
+              <input type="checkbox" name="consent_to_marketing" id="consent_marketing" value="1">
+              <label for="consent_marketing">I'd like to hear about Touchgrass updates and new features.</label>
+            </div>
+          </div>
+          <button type="submit" class="btn-submit">
+            Show me my cities 🗺️
+          </button>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+
+  </form>
+
+  <!-- Trust badges -->
+  <div class="trust-row">
+    <div class="trust-item">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      No account needed
+    </div>
+    <div class="trust-item">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Takes 2 minutes
+    </div>
+    <div class="trust-item">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      Results saved forever
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const totalQuestions = {{ questions|length }};
+  let currentQ = 1;
+
+  // Track which questions have been answered
+  const answered = {};
+
+  // ── FORCED CHOICE ──
+  function selectOption(btn, qid) {
+    const card = document.getElementById('q' + qid);
+    card.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    document.getElementById('input_' + qid).value = btn.dataset.value;
+    answered[qid] = true;
+    const nextBtn = document.getElementById('next_' + qid);
+    if (nextBtn) nextBtn.disabled = false;
+  }
+
+  // ── NAVIGATION ──
+  function goNext(qid, idx, total) {
+    if (!answered[qid] && document.getElementById('q' + qid).dataset.type === 'forced') return;
+    // For ranked, capture order before leaving
+    captureRank(qid);
+
+    document.getElementById('q' + qid).classList.remove('active');
+    const questions = {{ questions | tojson }};
+    const nextQid = questions[idx].id; // idx is already loop.index (1-based), so questions[idx] = next
+    document.getElementById('q' + nextQid).classList.add('active');
+    currentQ = idx + 1;
+    updateProgress(currentQ, total);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function goBack(qid) {
+    const questions = {{ questions | tojson }};
+    const idx = questions.findIndex(q => q.id === qid);
+    if (idx <= 0) return;
+    document.getElementById('q' + qid).classList.remove('active');
+    const prevQid = questions[idx - 1].id;
+    document.getElementById('q' + prevQid).classList.add('active');
+    currentQ = idx;
+    updateProgress(currentQ, totalQuestions);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Hide back button on first question
+  document.addEventListener('DOMContentLoaded', () => {
+    const questions = {{ questions | tojson }};
+    const firstBack = document.getElementById('back_' + questions[0].id);
+    if (firstBack) firstBack.disabled = true;
+    updateProgress(1, totalQuestions);
+    initAllRankLists();
+  });
+
+  function updateProgress(current, total) {
+    const pct = Math.round((current / total) * 100);
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressLabel').textContent = `Question ${current} of ${total}`;
+  }
+
+  // ── DRAG-AND-DROP RANKING ──
+  function initAllRankLists() {
+    document.querySelectorAll('.rank-list').forEach(list => {
+      initRankList(list);
+      updateRankBadges(list);
+    });
+  }
+
+  function initRankList(list) {
+    let dragSrc = null;
+
+    list.querySelectorAll('.rank-item').forEach(item => {
+      item.addEventListener('dragstart', e => {
+        dragSrc = item;
+        item.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      item.addEventListener('dragend', () => {
+        item.classList.remove('dragging');
+        list.querySelectorAll('.rank-item').forEach(i => i.classList.remove('drag-over'));
+        updateRankBadges(list);
+      });
+      item.addEventListener('dragover', e => {
+        e.preventDefault();
+        if (item !== dragSrc) item.classList.add('drag-over');
+      });
+      item.addEventListener('dragleave', () => item.classList.remove('drag-over'));
+      item.addEventListener('drop', e => {
+        e.preventDefault();
+        if (dragSrc && dragSrc !== item) {
+          const allItems = [...list.querySelectorAll('.rank-item')];
+          const srcIdx = allItems.indexOf(dragSrc);
+          const tgtIdx = allItems.indexOf(item);
+          if (srcIdx < tgtIdx) {
+            list.insertBefore(dragSrc, item.nextSibling);
+          } else {
+            list.insertBefore(dragSrc, item);
+          }
+        }
+        item.classList.remove('drag-over');
+      });
+    });
+  }
+
+  function updateRankBadges(list) {
+    list.querySelectorAll('.rank-item').forEach((item, i) => {
+      item.querySelector('.rank-badge').textContent = i + 1;
+    });
+  }
+
+  function captureRank(qid) {
+    const list = document.getElementById('ranklist_' + qid);
+    if (!list) return;
+    const order = [...list.querySelectorAll('.rank-item')].map(i => i.dataset.index);
+    const input = document.getElementById('rankinput_' + qid);
+    if (input) input.value = order.join(',');
+    answered[qid] = true;
+  }
+
+  // Capture rank on submit too
+  document.getElementById('surveyForm').addEventListener('submit', () => {
+    document.querySelectorAll('.rank-list').forEach(list => {
+      const qid = list.id.replace('ranklist_', '');
+      captureRank(qid);
+    });
+  });
+</script>
+
+</body>
+</html>

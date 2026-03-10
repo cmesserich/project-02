@@ -1,0 +1,1837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Your Touchgrass Results</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,900;1,300;1,600&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --cream:         #faf7f2;
+      --warm:          #f5ede0;
+      --sand:          #e8d9c4;
+      --sand-dark:     #d4c4aa;
+      --terracotta:    #c4603a;
+      --terra-light:   #e07a56;
+      --terra-dark:    #9e4228;
+      --forest:        #3a6b4a;
+      --forest-light:  #4e8c62;
+      --gold:          #d4a843;
+      --gold-light:    #e8c06e;
+      --sky:           #4a7fa5;
+      --ink:           #1e1a16;
+      --ink-mid:       #4a3f35;
+      --ink-soft:      #7a6e65;
+      --white:         #ffffff;
+      --radius-sm:     10px;
+      --radius:        16px;
+      --radius-lg:     24px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--cream);
+      color: var(--ink);
+      font-family: 'DM Sans', sans-serif;
+      line-height: 1.6;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 50% at 5% 0%, rgba(196,96,58,0.07) 0%, transparent 55%),
+        radial-gradient(ellipse 50% 40% at 95% 80%, rgba(212,168,67,0.06) 0%, transparent 55%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── NAV ── */
+    .top-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(250,247,242,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--sand);
+      padding: 0.9rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .nav-logo {
+      font-family: 'Space Mono', monospace;
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--ink);
+      text-decoration: none;
+      letter-spacing: -0.02em;
+    }
+
+    .nav-actions {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .btn-sm {
+      padding: 0.45rem 1rem;
+      border-radius: 99px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+      border: none;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1.5px solid var(--sand-dark);
+      color: var(--ink-mid);
+    }
+
+    .btn-outline:hover { border-color: var(--terracotta); color: var(--terracotta); }
+
+    .btn-terra {
+      background: var(--terracotta);
+      border: 1.5px solid var(--terracotta);
+      color: white;
+    }
+
+    .btn-terra:hover { background: var(--terra-dark); }
+
+    /* ── PAGE LAYOUT ── */
+    .page-wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem 6rem;
+    }
+
+    /* ── HERO RESULT ── */
+    .result-hero {
+      text-align: center;
+      margin-bottom: 3rem;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .result-eyebrow {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--terracotta);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      margin-bottom: 0.75rem;
+    }
+
+    .result-headline {
+      font-family: 'Fraunces', serif;
+      font-weight: 900;
+      font-size: clamp(2rem, 6vw, 3.2rem);
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      color: var(--ink);
+      margin-bottom: 0.75rem;
+    }
+
+    .result-headline em {
+      font-style: italic;
+      font-weight: 300;
+      color: var(--terracotta);
+    }
+
+    .result-sub {
+      font-size: 0.95rem;
+      color: var(--ink-soft);
+    }
+
+    /* ── WEIGHTS SUMMARY ── */
+    .weights-bar-section {
+      background: white;
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 12px rgba(30,26,22,0.05);
+      animation: fadeUp 0.6s 0.1s ease both;
+      opacity: 0;
+      animation-fill-mode: both;
+    }
+
+    .section-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--ink-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 1rem;
+    }
+
+    /* ── PRIORITY SUMMARY (plain english) ── */
+    .priority-summary {
+      background: white;
+      border-radius: var(--radius);
+      padding: 1.5rem 1.75rem;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 2px 12px rgba(30,26,22,0.05);
+      animation: fadeUp 0.6s 0.1s ease both;
+      opacity: 0;
+      animation-fill-mode: both;
+    }
+
+    .priority-summary-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--ink-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 0.6rem;
+    }
+
+    .priority-summary-text {
+      font-size: 0.97rem;
+      color: var(--ink-mid);
+      line-height: 1.65;
+    }
+
+    .priority-summary-text strong {
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    /* ── SLIDER PANEL ── */
+    .slider-panel {
+      background: white;
+      border-radius: var(--radius);
+      padding: 1.5rem 1.75rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 12px rgba(30,26,22,0.05);
+      animation: fadeUp 0.6s 0.15s ease both;
+      opacity: 0;
+      animation-fill-mode: both;
+    }
+
+    .slider-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.1rem;
+      gap: 1rem;
+    }
+
+    .slider-panel-title {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--ink-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .slider-panel-hint {
+      font-size: 0.78rem;
+      color: var(--ink-soft);
+    }
+
+    .slider-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .slider-label {
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--ink-mid);
+      width: 88px;
+      flex-shrink: 0;
+    }
+
+    .slider-track-wrap {
+      flex: 1;
+      position: relative;
+    }
+
+    .slider-input {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 99px;
+      outline: none;
+      cursor: pointer;
+      background: var(--sand);
+    }
+
+    .slider-input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: white;
+      border: 2.5px solid var(--terracotta);
+      cursor: pointer;
+      box-shadow: 0 1px 4px rgba(30,26,22,0.15);
+      transition: transform 0.15s;
+    }
+
+    .slider-input::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+    }
+
+    .slider-input::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: white;
+      border: 2.5px solid var(--terracotta);
+      cursor: pointer;
+    }
+
+    .slider-val {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--ink);
+      width: 36px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .slider-actions {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .slider-total {
+      font-size: 0.78rem;
+      color: var(--ink-soft);
+      margin-left: auto;
+    }
+
+    .slider-total.over { color: var(--terracotta); font-weight: 600; }
+    .slider-total.ok   { color: var(--forest); }
+
+    .reranking-indicator {
+      display: none;
+      font-size: 0.8rem;
+      color: var(--ink-soft);
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .reranking-indicator.show { display: flex; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { display: inline-block; animation: spin 0.8s linear infinite; }
+
+    /* ── CITY CARDS ── */
+    .cities-section {
+      margin-bottom: 2.5rem;
+    }
+
+    .cities-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+
+    .section-title {
+      font-family: 'Fraunces', serif;
+      font-weight: 600;
+      font-size: 1.2rem;
+      color: var(--ink);
+    }
+
+    .city-card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 12px rgba(30,26,22,0.05);
+      cursor: pointer;
+      transition: all 0.25s;
+      border: 2px solid transparent;
+      animation: fadeUp 0.5s ease both;
+      opacity: 0;
+      animation-fill-mode: both;
+    }
+
+    .city-card:hover {
+      box-shadow: 0 6px 24px rgba(30,26,22,0.1);
+      transform: translateY(-2px);
+      border-color: var(--sand);
+    }
+
+    .city-card.expanded {
+      border-color: var(--terracotta);
+      transform: none;
+    }
+
+    .city-card-top {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .city-expand-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--cream);
+      border: 1.5px solid var(--sand);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--ink-soft);
+      font-size: 0.8rem;
+      transition: all 0.2s;
+    }
+
+    .city-card.expanded .city-expand-btn {
+      background: var(--terracotta);
+      border-color: var(--terracotta);
+      color: white;
+      transform: rotate(180deg);
+    }
+
+    .city-rank {
+      font-family: 'Fraunces', serif;
+      font-weight: 900;
+      font-size: 2rem;
+      color: var(--sand-dark);
+      line-height: 1;
+      width: 44px;
+      flex-shrink: 0;
+    }
+
+    .city-card:nth-child(1) .city-rank { color: var(--terracotta); }
+    .city-card:nth-child(2) .city-rank { color: var(--gold); }
+    .city-card:nth-child(3) .city-rank { color: var(--forest); }
+
+    .city-info { flex: 1; min-width: 0; }
+
+    .city-name {
+      font-family: 'Fraunces', serif;
+      font-weight: 600;
+      font-size: 1.25rem;
+      color: var(--ink);
+      line-height: 1.2;
+      margin-bottom: 0.2rem;
+    }
+
+    .city-score-label {
+      font-size: 0.78rem;
+      color: var(--ink-soft);
+    }
+
+    .city-score-num {
+      font-family: 'Fraunces', serif;
+      font-weight: 900;
+      font-size: 2rem;
+      color: var(--terracotta);
+      line-height: 1;
+    }
+
+    .city-score-max {
+      font-size: 0.8rem;
+      color: var(--ink-soft);
+    }
+
+    .sub-scores-wrap {
+      margin-top: 0.85rem;
+    }
+
+    .sub-scores-label {
+      font-size: 0.68rem;
+      color: var(--ink-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+    }
+
+    .sub-scores {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .sub-pill {
+      padding: 0.25rem 0.65rem;
+      border-radius: 99px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .sub-pill.high   { background: rgba(58,107,74,0.12);  color: var(--forest); }
+    .sub-pill.mid    { background: rgba(212,168,67,0.15); color: #9a6c00; }
+    .sub-pill.low    { background: rgba(196,96,58,0.1);   color: var(--terra-dark); }
+
+    /* Expandable detail */
+    .city-detail {
+      display: none;
+      margin-top: 1.25rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--sand);
+    }
+
+    .city-card.expanded .city-detail { display: block; }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .radar-wrap {
+      background: var(--cream);
+      border-radius: var(--radius-sm);
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Stat cards */
+    .stat-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .stat-card {
+      background: var(--cream);
+      border-radius: var(--radius-sm);
+      padding: 0.85rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card-label {
+      font-size: 0.7rem;
+      color: var(--ink-soft);
+      line-height: 1.3;
+      margin-bottom: 0.35rem;
+    }
+
+    .stat-card-value {
+      font-family: 'Fraunces', serif;
+      font-weight: 600;
+      font-size: 1.1rem;
+      color: var(--ink);
+      line-height: 1.2;
+    }
+
+    .stat-card-percentile {
+      font-size: 0.68rem;
+      font-weight: 600;
+      margin-top: 0.35rem;
+    }
+
+    .pct-high { color: var(--forest); }
+    .pct-mid  { color: var(--gold); }
+    .pct-low  { color: var(--terracotta); }
+
+    .stat-card-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 3px;
+      border-radius: 0 99px 99px 0;
+      transition: width 1s ease;
+    }
+
+    .city-expand-hint {
+      font-size: 0.75rem;
+      color: var(--ink-soft);
+      margin-top: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .city-card.expanded .city-expand-hint { display: none; }
+
+    .city-detail-actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+
+    /* ── COMPARE SECTION ── */
+    .compare-section {
+      background: white;
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 12px rgba(30,26,22,0.05);
+    }
+
+    .compare-charts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-top: 1.25rem;
+    }
+
+    .compare-item {
+      text-align: center;
+    }
+
+    .compare-city-name {
+      font-family: 'Fraunces', serif;
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--ink);
+      margin-bottom: 0.75rem;
+    }
+
+    /* ── SHARE / SAVE ── */
+    .share-section {
+      background: linear-gradient(135deg, var(--terracotta), var(--terra-light));
+      border-radius: var(--radius);
+      padding: 2rem;
+      text-align: center;
+      color: white;
+      margin-bottom: 2rem;
+    }
+
+    .share-title {
+      font-family: 'Fraunces', serif;
+      font-weight: 900;
+      font-size: 1.4rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .share-sub {
+      font-size: 0.9rem;
+      opacity: 0.85;
+      margin-bottom: 1.25rem;
+    }
+
+    .share-url-box {
+      background: rgba(255,255,255,0.2);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 1rem;
+      font-size: 0.78rem;
+      font-family: monospace;
+      letter-spacing: 0.02em;
+      margin-bottom: 1rem;
+      word-break: break-all;
+    }
+
+    .share-actions {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-white {
+      background: white;
+      color: var(--terracotta);
+      border: none;
+      border-radius: 99px;
+      padding: 0.6rem 1.4rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-white:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+
+    .btn-white-outline {
+      background: transparent;
+      color: white;
+      border: 1.5px solid rgba(255,255,255,0.6);
+      border-radius: 99px;
+      padding: 0.6rem 1.4rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-white-outline:hover { background: rgba(255,255,255,0.1); }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .city-card:nth-child(1) { animation-delay: 0.15s; }
+    .city-card:nth-child(2) { animation-delay: 0.22s; }
+    .city-card:nth-child(3) { animation-delay: 0.29s; }
+    .city-card:nth-child(4) { animation-delay: 0.34s; }
+    .city-card:nth-child(5) { animation-delay: 0.38s; }
+    .city-card:nth-child(n+6) { animation-delay: 0.42s; }
+
+    /* ── MOBILE ── */
+    @media (max-width: 600px) {
+      /* Layout */
+      .page-wrap { padding: 1.25rem 0.9rem 5rem; }
+      .detail-grid { grid-template-columns: 1fr; }
+      .compare-charts { grid-template-columns: 1fr; }
+
+      /* Nav — hide Export, keep Retake + Share */
+      .btn-export { display: none; }
+      .nav-actions { gap: 0.5rem; }
+      .btn-sm { padding: 0.4rem 0.75rem; font-size: 0.78rem; }
+
+      /* Hero */
+      .result-headline { font-size: clamp(1.6rem, 8vw, 2.4rem); }
+
+      /* City card top row — tighten */
+      .city-rank { font-size: 1.5rem; }
+      .city-name { font-size: 1.05rem; }
+      .city-score-num { font-size: 1.6rem; }
+
+      /* Sub-score pills — smaller on mobile */
+      .sub-pill { font-size: 0.68rem; padding: 0.2rem 0.5rem; }
+
+      /* Radar — full width on mobile */
+      .radar-wrap { display: flex; justify-content: center; }
+      .radar-wrap canvas { width: 200px !important; height: 200px !important; }
+
+      /* Slider panel */
+      .slider-panel-header { flex-direction: column; align-items: flex-start; gap: 0.25rem; }
+      .slider-actions { flex-wrap: wrap; gap: 0.5rem; }
+      .slider-total { margin-left: 0; width: 100%; }
+      .slider-label { width: 72px; font-size: 0.78rem; }
+
+      /* Priority summary */
+      .priority-summary-text { font-size: 0.92rem; }
+
+      /* Share section */
+      .share-title { font-size: 1.15rem; }
+      .share-actions { flex-direction: column; }
+      .share-actions button,
+      .share-actions .btn-white,
+      .share-actions .btn-white-outline { width: 100%; text-align: center; }
+      .share-url-box { font-size: 0.72rem; word-break: break-all; }
+
+      /* Save link banner */
+      .save-link-banner { flex-direction: column; text-align: center; gap: 0.75rem; }
+      .save-link-banner .btn-sm { width: 100%; }
+    }
+
+    /* ── SAVE LINK BANNER ── */
+    .save-link-banner {
+      background: var(--warm);
+      border: 1.5px solid var(--sand);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.5rem;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      animation: fadeUp 0.5s 0.05s ease both;
+      opacity: 0;
+      animation-fill-mode: both;
+    }
+
+    .save-link-text {
+      font-size: 0.88rem;
+      color: var(--ink-mid);
+      line-height: 1.45;
+    }
+
+    .save-link-text strong {
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    /* ── EMAIL CAPTURE ── */
+    .email-capture {
+      background: white;
+      border-radius: var(--radius);
+      padding: 1.35rem 1.75rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 12px rgba(30,26,22,0.05);
+      animation: fadeUp 0.5s 0.1s ease both;
+      opacity: 0;
+      animation-fill-mode: both;
+    }
+
+    .email-capture-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--ink-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 0.5rem;
+    }
+
+    .email-capture-hint {
+      font-size: 0.88rem;
+      color: var(--ink-mid);
+      margin-bottom: 0.9rem;
+    }
+
+    .email-row {
+      display: flex;
+      gap: 0.6rem;
+    }
+
+    .email-input {
+      flex: 1;
+      padding: 0.55rem 0.9rem;
+      border: 1.5px solid var(--sand);
+      border-radius: 99px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem;
+      color: var(--ink);
+      background: var(--cream);
+      outline: none;
+      transition: border-color 0.2s;
+      min-width: 0;
+    }
+
+    .email-input:focus { border-color: var(--terracotta); }
+    .email-input::placeholder { color: var(--ink-soft); }
+
+    .email-sent-msg {
+      font-size: 0.85rem;
+      color: var(--forest);
+      font-weight: 500;
+      display: none;
+      margin-top: 0.5rem;
+    }
+
+    @media (max-width: 600px) {
+      .email-row { flex-direction: column; }
+      .email-input, .email-row .btn-sm { width: 100%; border-radius: 12px; }
+    }
+
+    /* ── AI SUMMARY PANEL ── */
+    .ai-summary {
+      background: white;
+      border-radius: var(--radius);
+      padding: 1.6rem 1.75rem;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 2px 12px rgba(30,26,22,0.05);
+      animation: fadeUp 0.6s 0.08s ease both;
+      opacity: 0;
+      animation-fill-mode: both;
+    }
+
+    .ai-summary-header {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.9rem;
+    }
+
+    .ai-summary-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--ink-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      flex: 1;
+    }
+
+    .ai-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--terracotta);
+      flex-shrink: 0;
+      transition: background 0.4s;
+    }
+
+    .ai-status-dot.thinking {
+      animation: pulse-dot 1.2s ease-in-out infinite;
+    }
+
+    .ai-status-dot.done {
+      background: var(--forest);
+      animation: none;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.4; transform: scale(0.7); }
+    }
+
+    .ai-status-label {
+      font-size: 0.72rem;
+      color: var(--ink-soft);
+    }
+
+    .ai-summary-body {
+      font-size: 0.95rem;
+      color: var(--ink-mid);
+      line-height: 1.75;
+    }
+
+    .ai-summary-body p + p { margin-top: 0.85rem; }
+
+    .ai-cursor {
+      display: inline-block;
+      width: 2px;
+      height: 1em;
+      background: var(--terracotta);
+      margin-left: 2px;
+      vertical-align: text-bottom;
+      animation: blink 0.75s step-end infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0; }
+    }
+
+    .ai-summary-body.done .ai-cursor { display: none; }
+
+    .ai-error { font-size: 0.85rem; color: var(--ink-soft); font-style: italic; }
+
+    @media (max-width: 600px) {
+      .ai-summary { padding: 1.25rem 1.1rem; }
+      .ai-summary-body { font-size: 0.9rem; }
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(60px);
+      background: var(--ink);
+      color: white;
+      padding: 0.7rem 1.5rem;
+      border-radius: 99px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: transform 0.3s ease;
+      z-index: 200;
+      pointer-events: none;
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav class="top-nav">
+  <a href="/" class="nav-logo">Touchgrass</a>
+  <div class="nav-actions">
+    <button class="btn-sm btn-outline btn-export" onclick="exportResults()">⬇ Export</button>
+    <form action="/reset/{{ session_id }}" method="POST" style="display:inline">
+      <button type="submit" class="btn-sm btn-outline">↺ Retake</button>
+    </form>
+    <button class="btn-sm btn-terra" onclick="copyLink()">Share 🔗</button>
+  </div>
+</nav>
+
+<div class="page-wrap">
+
+  <!-- Hero -->
+  <div class="result-hero">
+    <div class="result-eyebrow">Your personalized results</div>
+    <h1 class="result-headline">
+      Your #1 match is<br>
+      <em id="topCityName">Loading...</em>
+    </h1>
+    <p class="result-sub">Based on your preferences, here are your top cities — ranked just for you.</p>
+  </div>
+
+  <!-- AI Summary Panel -->
+  <div class="ai-summary" id="aiSummaryPanel">
+    <div class="ai-summary-header">
+      <div class="ai-summary-label">Why this is your match</div>
+      <span class="ai-status-label" id="aiStatusLabel">Analyzing your results...</span>
+      <div class="ai-status-dot thinking" id="aiStatusDot"></div>
+    </div>
+    <div class="ai-summary-body" id="aiSummaryBody">
+      <span class="ai-cursor"></span>
+    </div>
+  </div>
+
+  <!-- Priority Summary (plain english) -->
+  <div class="priority-summary">
+    <div class="priority-summary-label">What shaped your results</div>
+    <p class="priority-summary-text" id="prioritySummaryText">Loading...</p>
+  </div>
+
+  <!-- Slider Panel -->
+  <div class="slider-panel">
+    <div class="slider-panel-header">
+      <div>
+        <div class="slider-panel-title">Adjust the weights</div>
+        <div class="slider-panel-hint">Drag to see how your rankings change</div>
+      </div>
+      <div class="reranking-indicator" id="rerankingIndicator">
+        <span class="spin">⟳</span> Re-ranking...
+      </div>
+    </div>
+    <div class="slider-rows" id="sliderRows"></div>
+    <div class="slider-actions">
+      <button class="btn-sm btn-terra" id="rerankBtn" onclick="rerankCities()">Re-rank cities</button>
+      <button class="btn-sm btn-outline" id="resetBtn" onclick="resetWeights()" style="display:none">↺ Reset to my results</button>
+      <div class="slider-total" id="sliderTotal">Total: 100%</div>
+    </div>
+  </div>
+
+  <!-- City Cards -->
+  <div class="cities-section">
+    <div class="cities-header">
+      <div class="section-title">Your Top Cities</div>
+    </div>
+    <div id="cityCards"></div>
+  </div>
+
+  <!-- Compare Top 2 -->
+  <div class="compare-section" id="compareSection" style="display:none">
+    <div class="section-label">Side-by-side comparison</div>
+    <div class="section-title">#1 vs #2</div>
+    <div class="compare-charts">
+      <div class="compare-item">
+        <div class="compare-city-name" id="compare1Name"></div>
+        <canvas id="radarChart1" width="260" height="260"></canvas>
+      </div>
+      <div class="compare-item">
+        <div class="compare-city-name" id="compare2Name"></div>
+        <canvas id="radarChart2" width="260" height="260"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Save Your Link Banner -->
+  <div class="save-link-banner">
+    <div class="save-link-text">
+      <strong>Bookmark this page.</strong> No account needed — this URL is the only way back to your results.
+    </div>
+    <button class="btn-sm btn-terra" onclick="copyLink()" style="flex-shrink:0">Copy link</button>
+  </div>
+
+  <!-- Email Capture -->
+  <div class="email-capture">
+    <div class="email-capture-label">Want us to send you this link?</div>
+    <div class="email-capture-hint">Drop your email and we'll send you a link to your results — no account, no password, no spam.</div>
+    <div class="email-row">
+      <input type="email" class="email-input" id="emailInput" placeholder="you@example.com" />
+      <button class="btn-sm btn-terra" onclick="sendResultsLink()">Send my link</button>
+    </div>
+    <div class="email-sent-msg" id="emailSentMsg">✓ Link sent — check your inbox.</div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── DATA FROM SERVER ──
+const resultsRaw = {{ results | tojson }};
+const recommendations = resultsRaw.top_recommendations;
+const weightVector = resultsRaw.weight_vector;
+const sessionId = "{{ session_id }}";
+
+const SUBINDEX_COLORS = {
+  econ:      '#d4a843',
+  lifestyle: '#c4603a',
+  community: '#3a6b4a',
+  mobility:  '#4a7fa5',
+  health:    '#8a6bbf'
+};
+
+const SUBINDEX_LABELS = {
+  econ:      'Economic',
+  lifestyle: 'Lifestyle',
+  community: 'Community',
+  mobility:  'Mobility',
+  health:    'Health'
+};
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded', () => {
+  if (!recommendations || recommendations.length === 0) return;
+
+  document.getElementById('topCityName').textContent = recommendations[0].name;
+
+  renderPrioritySummary();
+  renderSliders();
+  renderCityCards();
+  renderCompareCharts();
+  streamAISummary();
+});
+
+// ── AI SUMMARY STREAMING ──
+async function streamAISummary() {
+  const body      = document.getElementById('aiSummaryBody');
+  const dot       = document.getElementById('aiStatusDot');
+  const statusLbl = document.getElementById('aiStatusLabel');
+
+  const city1 = recommendations[0];
+  const city2 = recommendations[1];
+
+  // Top priorities by weight for narrative framing
+  const sortedWeights = Object.entries(weightVector).sort((a, b) => b[1] - a[1]);
+  const topPriority   = SUBINDEX_LABELS[sortedWeights[0][0]];
+  const secondPriority = SUBINDEX_LABELS[sortedWeights[1][0]];
+
+  // Format stats as clean context (not a data table — a palette for storytelling)
+  function cityContext(city) {
+    const subs = Object.entries(city.sub_scores || {})
+      .sort((a, b) => b[1] - a[1])
+      .map(([k, v]) => `${SUBINDEX_LABELS[k]}: ${v}/100`)
+      .join(', ');
+    const stats = Object.entries(city.raw_stats || {})
+      .filter(([k]) => !k.endsWith('_label'))
+      .slice(0, 8)
+      .map(([k, v]) => `${city.raw_stats[k + '_label'] || k}: ${formatStat(k, v)}`)
+      .join(' | ');
+    return `${city.name} — overall match ${city.composite_score}/100\nScores: ${subs}\nData: ${stats}`;
+  }
+
+  const prompt = `You are writing a personalized city match summary for someone using a city-finding tool. Your job is to tell them a story about why their top city fits their life — not list stats at them.
+
+This person cares most about ${topPriority} and ${secondPriority}. Here is their full priority ranking and the data for their top two matches:
+
+${sortedWeights.map(([k, v], i) => `${i+1}. ${SUBINDEX_LABELS[k]} (${Math.round(v*100)}%)`).join('\n')}
+
+TOP MATCH:
+${cityContext(city1)}
+
+${city2 ? `RUNNER UP:\n${cityContext(city2)}` : ''}
+
+Write 2 short paragraphs in a warm, direct voice — like a knowledgeable friend explaining a recommendation, not a consultant presenting a report.
+
+Paragraph 1: Tell them why ${city1.name} fits the life they described. Lead with what the city actually feels like to live in for someone with their priorities. Weave in 1-2 specific numbers as supporting evidence, not as the main point.
+
+Paragraph 2: Give them one honest, useful comparison to ${city2 ? city2.name : 'the runner-up'} — what's genuinely different, what tradeoff they'd be making, and which type of person would flip their choice.
+
+Rules:
+- Warm and direct. Never generic. Never corporate.
+- Stats serve the story — don't lead with them.
+- No headers. No bullets. Just two paragraphs.
+- Do not mention being an AI or reference "the data."
+- Under 130 words total.`;
+
+  console.log('[AI Summary] Starting stream...');
+  console.log('[AI Summary] Prompt:\n', prompt);
+
+  // ── Smooth typing queue ──
+  // Chunks arrive in bursts from the API. Instead of rendering each chunk
+  // immediately (which looks jerky), we buffer all incoming text and drain
+  // it at a fixed per-character rate for a smooth typewriter effect.
+  let typeQueue   = '';      // characters waiting to be displayed
+  let displayText = '';      // characters already shown
+  let streamDone  = false;   // true once the API response is fully received
+  const CHAR_DELAY_MS = 18;  // ~55 chars/sec — readable but feels alive
+
+  body.innerHTML = '<p><span class="ai-cursor"></span></p>';
+
+  function renderDisplay() {
+    // Split into paragraphs and inject cursor at the end of the last one
+    const parts = displayText.split(/\n\n+/);
+    let html = '';
+    parts.forEach((p, i) => {
+      const text = p.replace(/\n/g, ' ').trim();
+      if (!text) return;
+      if (i < parts.length - 1) {
+        html += `<p>${text}</p>`;
+      } else {
+        html += `<p>${text}${streamDone ? '' : '<span class="ai-cursor"></span>'}</p>`;
+      }
+    });
+    body.innerHTML = html || `<p><span class="ai-cursor"></span></p>`;
+  }
+
+  // Drain one character from the queue every CHAR_DELAY_MS ms
+  function drainQueue() {
+    if (typeQueue.length > 0) {
+      // Drain slightly faster if queue is building up (API ahead of display)
+      const batch = typeQueue.length > 40 ? 3 : 1;
+      displayText += typeQueue.slice(0, batch);
+      typeQueue    = typeQueue.slice(batch);
+      renderDisplay();
+    }
+    if (!streamDone || typeQueue.length > 0) {
+      setTimeout(drainQueue, CHAR_DELAY_MS);
+    } else {
+      // All done — clean up cursor and mark complete
+      body.classList.add('done');
+      renderDisplay();
+      dot.classList.remove('thinking');
+      dot.classList.add('done');
+      statusLbl.textContent = 'Analysis complete';
+      console.log('[AI Summary] Done. Full text:\n', displayText);
+    }
+  }
+
+  try {
+    const response = await fetch('/api/summary', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, session_id: sessionId })
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      console.error('[AI Summary] API error:', response.status, err);
+      throw new Error(`API ${response.status}`);
+    }
+
+    console.log('[AI Summary] Stream open, reading chunks...');
+    drainQueue(); // Start the display timer before first chunk arrives
+
+    const reader  = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value, { stream: true });
+      console.log('[AI Summary] Raw chunk:', chunk);
+
+      const lines = chunk.split('\n');
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const data = line.slice(6).trim();
+        if (data === '[DONE]') continue;
+
+        try {
+          const parsed = JSON.parse(data);
+          console.log('[AI Summary] Event:', parsed.type, parsed);
+
+          if (parsed.type === 'content_block_delta' && parsed.delta?.type === 'text_delta') {
+            typeQueue += parsed.delta.text; // Buffer — don't render yet
+          }
+          if (parsed.type === 'message_stop') {
+            console.log('[AI Summary] API stream complete, draining display queue...');
+          }
+        } catch (e) {
+          console.warn('[AI Summary] Could not parse line:', line, e);
+        }
+      }
+    }
+
+    streamDone = true; // Signal drainQueue to finish and clean up
+
+  } catch (err) {
+    console.error('[AI Summary] Failed:', err);
+    streamDone = true;
+    body.innerHTML = '<p class="ai-error">Could not load analysis — your results are still accurate below.</p>';
+    dot.style.background = 'var(--sand-dark)';
+    dot.classList.remove('thinking');
+    statusLbl.textContent = '';
+  }
+}
+
+
+const SUBINDEX_DESCRIPTIONS = {
+  econ:      'economic factors like income, housing costs, and job growth',
+  lifestyle: 'lifestyle amenities like restaurants, parks, cafés, and arts',
+  community: 'community factors like education, diversity, and civic engagement',
+  mobility:  'mobility and transit like commute times, biking, and public transport',
+  health:    'health and wellness like air quality, green space, and healthcare access'
+};
+
+function renderPrioritySummary() {
+  const sorted = Object.entries(weightVector).sort((a, b) => b[1] - a[1]);
+  const top = sorted[0];
+  const second = sorted[1];
+  const third = sorted[2];
+  const bottom = sorted[sorted.length - 1];
+
+  const topPct  = Math.round(top[1] * 100);
+  const secPct  = Math.round(second[1] * 100);
+  const botPct  = Math.round(bottom[1] * 100);
+
+  // Determine phrasing based on spread between top and bottom
+  const spread = top[1] - bottom[1];
+  let sentence;
+
+  if (spread < 0.06) {
+    // All roughly equal
+    sentence = `Your results weigh all five categories pretty evenly — no single factor dominates. 
+    Cities that score consistently across <strong>${SUBINDEX_DESCRIPTIONS[top[0]]}</strong> and 
+    <strong>${SUBINDEX_DESCRIPTIONS[second[0]]}</strong> will tend to rise to the top.`;
+  } else if (spread < 0.15) {
+    // Mild lean
+    sentence = `Your results lean toward <strong>${SUBINDEX_DESCRIPTIONS[top[0]]}</strong> 
+    and <strong>${SUBINDEX_DESCRIPTIONS[second[0]]}</strong>, with the other categories 
+    still playing a meaningful role. Cities that balance all five tend to rank highest for you.`;
+  } else {
+    // Strong preference
+    sentence = `Your results are most shaped by <strong>${SUBINDEX_DESCRIPTIONS[top[0]]}</strong> 
+    (${topPct}% of your score), followed by <strong>${SUBINDEX_DESCRIPTIONS[second[0]]}</strong> 
+    (${secPct}%). <strong>${SUBINDEX_DESCRIPTIONS[bottom[0]]}</strong> matters least at ${botPct}% — 
+    but you can adjust the weights below to see how that changes your rankings.`;
+  }
+
+  document.getElementById('prioritySummaryText').innerHTML = sentence;
+}
+
+// ── SLIDERS ──
+// Live copy of weights the user can adjust
+let currentWeights = { ...weightVector };
+const originalWeights = { ...weightVector };
+let isCustomWeights = false;
+
+function renderSliders() {
+  const container = document.getElementById('sliderRows');
+  container.innerHTML = '';
+
+  const order = ['health', 'lifestyle', 'community', 'mobility', 'econ'];
+
+  order.forEach(key => {
+    const val = Math.round((currentWeights[key] || 0) * 100);
+    const color = SUBINDEX_COLORS[key];
+    const row = document.createElement('div');
+    row.className = 'slider-row';
+    row.innerHTML = `
+      <div class="slider-label">${SUBINDEX_LABELS[key]}</div>
+      <div class="slider-track-wrap">
+        <input
+          type="range"
+          class="slider-input"
+          id="slider_${key}"
+          min="0" max="100" step="1"
+          value="${val}"
+          style="accent-color: ${color}"
+          oninput="onSliderInput('${key}', this.value)"
+        />
+      </div>
+      <div class="slider-val" id="sliderVal_${key}">${val}%</div>
+    `;
+    container.appendChild(row);
+  });
+
+  updateSliderTotal();
+}
+
+function onSliderInput(changedKey, rawVal) {
+  const newVal = parseInt(rawVal);
+
+  // Update the changed key
+  currentWeights[changedKey] = newVal / 100;
+
+  // Normalize all others proportionally to fill remaining space
+  const remaining = 100 - newVal;
+  const otherKeys = Object.keys(currentWeights).filter(k => k !== changedKey);
+  const otherSum = otherKeys.reduce((s, k) => s + Math.round(currentWeights[k] * 100), 0);
+
+  if (otherSum > 0) {
+    otherKeys.forEach(k => {
+      const oldPct = Math.round(currentWeights[k] * 100);
+      currentWeights[k] = (oldPct / otherSum) * (remaining / 100);
+    });
+  } else {
+    // Edge case: all others are 0, distribute evenly
+    otherKeys.forEach(k => { currentWeights[k] = remaining / (otherKeys.length * 100); });
+  }
+
+  // Update all slider displays using corrected rounding
+  const keys = Object.keys(currentWeights);
+  const rounded = keys.map(k => Math.round(currentWeights[k] * 100));
+  let roundedTotal = rounded.reduce((s, v) => s + v, 0);
+  if (roundedTotal !== 100) {
+    // Adjust largest (that isn't the one being dragged) to absorb rounding error
+    const adjustCandidates = keys.map((k, i) => ({ k, i, v: rounded[i] }))
+                                 .filter(x => x.k !== changedKey)
+                                 .sort((a, b) => b.v - a.v);
+    if (adjustCandidates.length) adjustCandidates[0].v -= (roundedTotal - 100);
+    adjustCandidates.forEach(x => { rounded[x.i] = x.v; });
+  }
+
+  keys.forEach((k, idx) => {
+    const slider = document.getElementById('slider_' + k);
+    const valEl  = document.getElementById('sliderVal_' + k);
+    if (slider && k !== changedKey) slider.value = rounded[idx];
+    if (valEl) valEl.textContent = rounded[idx] + '%';
+  });
+
+  updateSliderTotal();
+}
+
+function updateSliderTotal() {
+  // Round each weight independently, then correct any ±1 rounding error
+  const keys = Object.keys(currentWeights);
+  const rounded = keys.map(k => Math.round(currentWeights[k] * 100));
+  let total = rounded.reduce((s, v) => s + v, 0);
+
+  // If off by 1 or 2 due to float rounding, adjust the largest value
+  if (total !== 100) {
+    const maxIdx = rounded.indexOf(Math.max(...rounded));
+    rounded[maxIdx] -= (total - 100);
+    total = 100;
+  }
+
+  const el = document.getElementById('sliderTotal');
+  el.textContent = `Total: ${total}%`;
+  el.className = 'slider-total ok';
+}
+
+async function rerankCities() {
+  const indicator = document.getElementById('rerankingIndicator');
+  const btn = document.getElementById('rerankBtn');
+  indicator.classList.add('show');
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/rescore', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ weights: currentWeights })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    // Re-render city cards with new rankings
+    const container = document.getElementById('cityCards');
+    container.innerHTML = '';
+    // Merge new scores with existing enriched data (raw_stats, stat_percentiles preserved)
+    data.rankings.forEach((newCity, i) => {
+      const existing = recommendations.find(r => r.cbsa_code === newCity.cbsa_code);
+      if (existing) {
+        existing.rank = newCity.rank;
+        existing.composite_score = newCity.composite_score;
+        existing.sub_scores = newCity.sub_scores;
+      }
+    });
+    // Sort by new rank
+    recommendations.sort((a, b) => a.rank - b.rank);
+    renderCityCards();
+
+    isCustomWeights = true;
+    document.getElementById('resetBtn').style.display = '';
+    document.getElementById('topCityName').textContent = recommendations[0].name;
+
+  } catch (err) {
+    console.error('Rescore failed:', err);
+    showToast('Re-ranking failed — try again');
+  } finally {
+    indicator.classList.remove('show');
+    btn.disabled = false;
+  }
+}
+
+function resetWeights() {
+  currentWeights = { ...originalWeights };
+  isCustomWeights = false;
+  renderSliders();
+
+  // Restore original rankings
+  recommendations.sort((a, b) => a.rank - b.rank);
+  // Reset ranks and scores from original data
+  resultsRaw.top_recommendations.forEach(orig => {
+    const r = recommendations.find(r => r.cbsa_code === orig.cbsa_code);
+    if (r) {
+      r.rank = orig.rank;
+      r.composite_score = orig.composite_score;
+      r.sub_scores = orig.sub_scores;
+    }
+  });
+  recommendations.sort((a, b) => a.rank - b.rank);
+
+  const container = document.getElementById('cityCards');
+  container.innerHTML = '';
+  renderCityCards();
+
+  document.getElementById('resetBtn').style.display = 'none';
+  document.getElementById('topCityName').textContent = recommendations[0].name;
+  showToast('Reset to your original results');
+}
+
+// ── CITY CARDS ──
+function renderCityCards() {
+  const container = document.getElementById('cityCards');
+  recommendations.forEach((city, i) => {
+    const card = document.createElement('div');
+    card.className = 'city-card';
+    card.id = 'cityCard_' + i;
+    // Entire card is clickable
+    card.onclick = () => toggleCity(i);
+
+    const subPills = Object.entries(city.sub_scores || {}).map(([key, val]) => {
+      const cls = val >= 75 ? 'high' : val >= 50 ? 'mid' : 'low';
+      const label = SUBINDEX_LABELS[key] || key;
+      return `<span class="sub-pill ${cls}" title="This city's score for ${label} out of 100">${label}: ${val}</span>`;
+    }).join('');
+
+    const statCardsHtml = buildStatCards(city);
+
+    card.innerHTML = `
+      <div class="city-card-top">
+        <div class="city-rank">${city.rank}</div>
+        <div class="city-info">
+          <div class="city-name">${city.name}</div>
+          <div class="city-score-label">Match Score</div>
+        </div>
+        <div style="text-align:right; margin-left:auto">
+          <div class="city-score-num">${city.composite_score}</div>
+          <div class="city-score-max">/ 100</div>
+        </div>
+        <div class="city-expand-btn">▾</div>
+      </div>
+      <div class="sub-scores-wrap">
+        <div class="sub-scores-label">How this city scores</div>
+        <div class="sub-scores">${subPills}</div>
+      </div>
+      <div class="city-expand-hint">↓ Click anywhere to explore stats &amp; charts</div>
+      <div class="city-detail">
+        <div class="detail-grid">
+          <div class="radar-wrap">
+            <canvas id="radar_${i}" width="220" height="220"></canvas>
+          </div>
+          <div>
+            <div class="section-label" style="margin-bottom:0.75rem">Stats based on your priorities</div>
+            <div class="stat-cards" id="stats_${i}">${statCardsHtml}</div>
+          </div>
+        </div>
+        <div class="city-detail-actions">
+          <button class="btn-sm btn-outline" id="statsBtn_${i}" onclick="event.stopPropagation(); toggleFullStats('${city.cbsa_code}', ${i}, this)">
+            See all stats →
+          </button>
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function buildStatCards(city) {
+  const raw = city.raw_stats || {};
+  const pcts = city.stat_percentiles || {};
+  const keys = Object.keys(raw).filter(k => !k.endsWith('_label'));
+  if (keys.length === 0) return '<p style="color:var(--ink-soft);font-size:0.85rem">Stats loading...</p>';
+
+  return keys.slice(0, 6).map(key => {
+    const val = raw[key];
+    const label = raw[key + '_label'] || key;
+    const pct = pcts[key];
+    const pctCls = pct >= 70 ? 'pct-high' : pct >= 40 ? 'pct-mid' : 'pct-low';
+    const barColor = pct >= 70 ? 'var(--forest)' : pct >= 40 ? 'var(--gold)' : 'var(--terracotta)';
+    // Invert percentile for "worse is better" stats
+    const invertedStats = ['avg_aqi', 'avg_commute_time_min', 'unemployment_rate', 'poverty_rate',
+                           'rent_to_income_ratio', 'obesity_rate', 'physical_inactivity_rate',
+                           'mental_health_poor_days', 'pct_drive_alone', 'gini_coefficient'];
+    const isInverted = invertedStats.includes(key);
+    const displayPct = isInverted ? (100 - pct) : pct;
+    const pctText = pct !== undefined
+      ? `Better than ${displayPct}% of cities`
+      : '';
+    const displayVal = formatStat(key, val);
+
+    return `
+      <div class="stat-card">
+        <div class="stat-card-label">${label}</div>
+        <div class="stat-card-value">${displayVal}</div>
+        ${pct !== undefined ? `<div class="stat-card-percentile ${pctCls}">${pctText}</div>` : ''}
+        <div class="stat-card-bar" style="width:${displayPct || 0}%; background:${barColor}"></div>
+      </div>
+    `;
+  }).join('');
+}
+
+function formatStat(key, val) {
+  if (val === null || val === undefined) return '—';
+  const income_keys = ['median_household_income', 'per_capita_income', 'median_home_value', 'median_gross_rent'];
+  if (income_keys.includes(key)) return '$' + Math.round(val).toLocaleString();
+  const pct_keys = ['unemployment_rate', 'poverty_rate', 'pct_bachelors_or_higher', 'pct_public_transit',
+                    'pct_walk_or_bike', 'pct_drive_alone', 'homeownership_rate', 'health_insurance_coverage_rate',
+                    'voter_participation_rate', 'obesity_rate', 'physical_inactivity_rate'];
+  if (pct_keys.includes(key)) return (val * (val <= 1 ? 100 : 1)).toFixed(1) + '%';
+  if (key === 'avg_commute_time_min') return Math.round(val) + ' min';
+  if (key === 'green_space_per_capita_sqm') return Math.round(val).toLocaleString() + ' sqm';
+  if (key === 'gini_coefficient' || key === 'cost_of_living_index') return parseFloat(val).toFixed(2);
+  return parseFloat(val).toFixed(1);
+}
+
+// ── TOGGLE CITY EXPAND ──
+function toggleCity(i) {
+  const card = document.getElementById('cityCard_' + i);
+  const wasExpanded = card.classList.contains('expanded');
+  // Collapse all
+  document.querySelectorAll('.city-card').forEach(c => c.classList.remove('expanded'));
+  if (!wasExpanded) {
+    card.classList.add('expanded');
+    renderRadarChart('radar_' + i, recommendations[i]);
+    animateStatBars('stats_' + i);
+  }
+}
+
+function animateStatBars(containerId) {
+  // Bars start at 0 via inline style — trigger after render
+  requestAnimationFrame(() => {
+    document.querySelectorAll(`#${containerId} .stat-card-bar`).forEach(bar => {
+      bar.style.transition = 'width 1s ease';
+    });
+  });
+}
+
+// ── RADAR CHART ──
+function renderRadarChart(canvasId, city) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas || canvas._chartInstance) return;
+  const scores = city.sub_scores || {};
+  const labels = Object.keys(scores).map(k => SUBINDEX_LABELS[k] || k);
+  // Normalize: if max value <= 1.0 it's stored as decimal, multiply to 0-100
+  const rawVals = Object.values(scores).map(v => parseFloat(v));
+  const data = rawVals.map(v => v <= 1.0 ? Math.round(v * 100) : v);
+
+  const chart = new Chart(canvas, {
+    type: 'radar',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: 'rgba(196,96,58,0.15)',
+        borderColor: '#c4603a',
+        borderWidth: 2.5,
+        pointBackgroundColor: '#c4603a',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 1.5,
+        pointRadius: 5,
+        fill: true,
+      }]
+    },
+    options: {
+      animation: { duration: 800 },
+      scales: {
+        r: {
+          min: 0,
+          max: 100,
+          beginAtZero: true,
+          ticks: {
+            display: false,
+            stepSize: 25,
+          },
+          grid: {
+            color: 'rgba(30,26,22,0.1)',
+          },
+          angleLines: {
+            color: 'rgba(30,26,22,0.1)',
+          },
+          pointLabels: {
+            font: { family: 'DM Sans', size: 11, weight: '600' },
+            color: '#4a3f35',
+            padding: 8,
+          }
+        }
+      },
+      plugins: { legend: { display: false } },
+      elements: {
+        line: { tension: 0.1 }
+      }
+    }
+  });
+  canvas._chartInstance = chart;
+}
+
+// ── COMPARE CHARTS ──
+function renderCompareCharts() {
+  if (recommendations.length < 2) return;
+  document.getElementById('compareSection').style.display = 'block';
+  document.getElementById('compare1Name').textContent = recommendations[0].name;
+  document.getElementById('compare2Name').textContent = recommendations[1].name;
+
+  [0, 1].forEach(i => {
+    const city = recommendations[i];
+    const canvas = document.getElementById('radarChart' + (i + 1));
+    const scores = city.sub_scores || {};
+    const color = i === 0 ? '#c4603a' : '#3a6b4a';
+
+    new Chart(canvas, {
+      type: 'radar',
+      data: {
+        labels: Object.keys(scores).map(k => SUBINDEX_LABELS[k] || k),
+        datasets: [{
+          data: Object.values(scores).map(v => { const f = parseFloat(v); return f <= 1.0 ? Math.round(f * 100) : f; }),
+          backgroundColor: `${color}20`,
+          borderColor: color,
+          borderWidth: 2.5,
+          pointBackgroundColor: color,
+          pointBorderColor: '#fff',
+          pointBorderWidth: 1.5,
+          pointRadius: 5,
+          fill: true,
+        }]
+      },
+      options: {
+        animation: { duration: 1000, delay: 300 + i * 150 },
+        scales: {
+          r: {
+            min: 0,
+            max: 100,
+            beginAtZero: true,
+            ticks: { display: false, stepSize: 25 },
+            grid: { color: 'rgba(30,26,22,0.1)' },
+            angleLines: { color: 'rgba(30,26,22,0.1)' },
+            pointLabels: {
+              font: { family: 'DM Sans', size: 11, weight: '600' },
+              color: '#4a3f35',
+              padding: 8,
+            }
+          }
+        },
+        plugins: { legend: { display: false } },
+        elements: { line: { tension: 0.1 } }
+      }
+    });
+  });
+}
+
+// ── STATS TOGGLE ──
+// Tracks expanded state per city index
+const statsExpanded = {};
+// Stores the original priority-stats HTML so we can restore it on collapse
+const statsOriginal = {};
+
+// Stats ordered by how universally useful they are — used to pick top 15
+const STAT_PRIORITY_ORDER = [
+  'median_household_income', 'median_home_value', 'median_gross_rent',
+  'cost_of_living_index', 'rent_to_income_ratio', 'unemployment_rate',
+  'poi_cafe_density', 'poi_restaurant_density', 'poi_trail_density',
+  'poi_park_density', 'bike_lane_density', 'avg_commute_time_min',
+  'pct_walk_or_bike', 'pct_public_transit', 'walkability_score',
+  'avg_aqi', 'health_insurance_coverage_rate', 'diversity_index',
+  'pct_bachelors_or_higher', 'poi_coworking_density', 'green_space_per_capita_sqm',
+  'homeownership_rate', 'school_quality_index', 'voter_participation_rate',
+  'obesity_rate', 'median_age', 'per_capita_income',
+  'transit_stop_density', 'poi_gym_density', 'poi_hospital_density'
+];
+
+async function toggleFullStats(cbsaCode, cityIdx, btn) {
+  const container = document.getElementById('stats_' + cityIdx);
+  if (!container) return;
+
+  // If already expanded — collapse back to original
+  if (statsExpanded[cityIdx]) {
+    container.innerHTML = statsOriginal[cityIdx];
+    btn.textContent = 'See all stats →';
+    statsExpanded[cityIdx] = false;
+    return;
+  }
+
+  // Save original HTML before replacing
+  statsOriginal[cityIdx] = container.innerHTML;
+
+  btn.textContent = 'Loading...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(`/api/city/${cbsaCode}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    // Flatten all stats across subindices into one list
+    const allStats = [];
+    Object.entries(data.stats || {}).forEach(([subindex, cols]) => {
+      Object.entries(cols).forEach(([col, info]) => {
+        if (info.value !== null) {
+          allStats.push({ col, info, subindex });
+        }
+      });
+    });
+
+    // Sort by STAT_PRIORITY_ORDER, unknown stats go to end
+    allStats.sort((a, b) => {
+      const ai = STAT_PRIORITY_ORDER.indexOf(a.col);
+      const bi = STAT_PRIORITY_ORDER.indexOf(b.col);
+      return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+    });
+
+    // Take top 15
+    const top15 = allStats.slice(0, 15);
+
+    const html = top15.map(({ col, info }) => {
+      const displayVal = formatStat(col, info.value);
+      return `
+        <div class="stat-card">
+          <div class="stat-card-label">${info.label}</div>
+          <div class="stat-card-value">${displayVal}</div>
+        </div>
+      `;
+    }).join('');
+
+    container.innerHTML = html || '<p style="color:var(--ink-soft);font-size:0.85rem">No data available.</p>';
+    statsExpanded[cityIdx] = true;
+    btn.textContent = '↑ Show less';
+    btn.disabled = false;
+
+  } catch (err) {
+    console.error('Failed to load stats:', err);
+    btn.textContent = 'Failed — try again';
+    btn.disabled = false;
+  }
+}
+
+// ── SEND RESULTS LINK ──
+async function sendResultsLink() {
+  const input = document.getElementById('emailInput');
+  const msg = document.getElementById('emailSentMsg');
+  const email = input.value.trim();
+
+  if (!email || !email.includes('@')) {
+    input.style.borderColor = 'var(--terracotta)';
+    input.focus();
+    return;
+  }
+  input.style.borderColor = '';
+
+  try {
+    const res = await fetch('/api/send-link', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, session_id: sessionId, url: window.location.href })
+    });
+    if (!res.ok) throw new Error();
+    msg.style.display = 'block';
+    input.value = '';
+  } catch {
+    showToast('Could not send — try copying the link instead');
+  }
+}
+
+// ── COPY LINK ──
+function copyLink() {
+  navigator.clipboard.writeText(window.location.href).then(() => showToast('Link copied!'));
+}
+
+// ── EXPORT ──
+function exportResults() {
+  window.print();
+}
+
+// ── TOAST ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
+
+</body>
+</html>
