@@ -95,7 +95,7 @@ def rescore_cities(weights: dict) -> list:
         df["personalized_score"] = 50.0
     
     df["personalized_score"] = df["personalized_score"].fillna(0)
-    
+
     df = df.sort_values("personalized_score", ascending=False)
 
     results = []
@@ -118,30 +118,29 @@ def get_top_cities(weights: dict, n: int = 10) -> list:
     return rescore_cities(weights)[:n]
 
 if __name__ == "__main__":
-    # Test 1 — cost-focused user (should hurt Seattle badly)
-    cost_weights = {
-        "econ": 0.6,
-        "lifestyle": 0.1,
-        "community": 0.1,
-        "mobility": 0.1,
-        "health": 0.1
+# Test with survey-derived weight vectors
+    outdoor_lifestyle = {
+        "econ": 0.049,
+        "lifestyle": 0.3353,
+        "community": 0.1588,
+        "mobility": 0.1902,
+        "health": 0.2667
     }
-    print("Cost-focused user (should NOT be Seattle):")
+
+    cost_practical = {
+        "econ": 0.4373,
+        "lifestyle": 0.1529,
+        "community": 0.0961,
+        "mobility": 0.1647,
+        "health": 0.149
+    }
+
+    print("Outdoor/lifestyle profile top 10:")
     print("─" * 50)
-    for city in get_top_cities(cost_weights):
+    for city in get_top_cities(outdoor_lifestyle):
         print(f"{city['rank']:2}. {city['name']:<35} {city['personalized_score']}")
 
-    print()
-
-    # Test 2 — nature/outdoor focused (Seattle might still appear but shouldn't dominate)
-    outdoor_weights = {
-        "econ": 0.1,
-        "lifestyle": 0.5,
-        "community": 0.1,
-        "mobility": 0.1,
-        "health": 0.2
-    }
-    print("Outdoor/lifestyle focused user:")
+    print("\nCost/practical profile top 10:")
     print("─" * 50)
-    for city in get_top_cities(outdoor_weights):
+    for city in get_top_cities(cost_practical):
         print(f"{city['rank']:2}. {city['name']:<35} {city['personalized_score']}")

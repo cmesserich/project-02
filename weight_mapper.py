@@ -64,30 +64,49 @@ def weights_to_percentages(weight_vector: dict) -> dict:
 
 
 if __name__ == "__main__":
-    # Quick test — run this file directly to verify it works
-    # Simulates a user who cares mostly about mobility and lifestyle
-    test_responses = {
-        1: 4,  # "Getting around without a car"
-        2: 0,  # "I want to walk or bike to everything"
-        3: 0,  # "Dense, walkable, lots of restaurants and bars"
-        4: 2,  # "I'll pay more for the right city"
-        5: 1,  # "Somewhat important"
-        6: 1,  # "I care about it but it's not the deciding factor"
-        7: 1,  # "I prefer it but can adapt"
-        8: 1,  # "Somewhat important"
-        9: 0,  # "Remote worker"
-        10: 0, # "Lots of restaurants, bars, and cafes"
-        11: 1, # "Somewhat important"
-        12: [1, 2, 0]  # Ranked: rent > affordable > own
+    # Test 1 — top answers (outdoor/lifestyle focused)
+    top_responses = {
+        1: 0,   # Get outside
+        2: 1,   # Nothing to do
+        3: 0,   # Walk or bike
+        4: 1,   # Stretch budget
+        5: 0,   # Dense, walkable
+        6: 0,   # Clean air non-negotiable
+        7: 0,   # Roots, civic life
+        8: 0,   # Need good hospitals
+        9: 0,   # Fully remote
+        10: 0,  # Lots of restaurants
+        11: 0,  # Trail recommendation
+        12: [2, 0, 1, 3]  # Flexibility first
     }
 
-    weights = map_weights(test_responses)
-    percentages = weights_to_percentages(weights)
+    # Test 2 — bottom answers (cost/practical focused)
+    bottom_responses = {
+        1: 3,   # Gym, wellness
+        2: 0,   # Too expensive
+        3: 2,   # Drive, fine with it
+        4: 0,   # Affordability #1
+        5: 2,   # Quiet, practical
+        6: 2,   # Never factors in
+        7: 2,   # Don't optimize for community
+        8: 2,   # Not a deciding factor
+        9: 1,   # Hybrid/on-site
+        10: 2,  # Cook at home
+        11: 3,  # Finances dialed in
+        12: [1, 0, 2, 3]  # Low cost first
+    }
 
-    print("Weight vector:")
-    for subindex, weight in weights.items():
-        print(f"  {subindex}: {weight}")
+    weights1 = map_weights(top_responses)
+    weights2 = map_weights(bottom_responses)
 
-    print("\nAs percentages:")
-    for subindex, pct in percentages.items():
-        print(f"  {subindex}: {pct}%")
+    print("Top answers (outdoor/lifestyle):")
+    for k, v in weights1.items():
+        print(f"  {k}: {v}")
+
+    print("\nBottom answers (cost/practical):")
+    for k, v in weights2.items():
+        print(f"  {k}: {v}")
+
+    print("\nDelta (top minus bottom):")
+    for k in weights1:
+        print(f"  {k}: {round(weights1[k] - weights2[k], 4)}")
