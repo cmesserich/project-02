@@ -509,6 +509,8 @@ async def api_send_link(request: Request):
 
 
 
+
+@app.post("/api/rescore")
 async def api_rescore(request: Request):
     """
     Re-score all cities with a custom weight vector supplied by the frontend.
